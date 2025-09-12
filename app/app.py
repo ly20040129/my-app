@@ -11,8 +11,12 @@ import streamlit as st  # 导入Streamlit
 st.set_page_config(page_title="AI智能助手", page_icon="💩")
 
 # 加载环境变量
-load_dotenv("e:/vscode/.env")  # 指定env路径
+load_dotenv()  # 指定env路径
 api_key = os.getenv("ZHIPUAI_API_KEY")
+
+if not api_key:
+    st.error("未找到 ZHIPUAI_API_KEY。请在本地创建 .env 文件或在云端设置 Secrets。")
+    st.stop() # 停止应用
 
 # 初始化模型和代理（使用缓存避免重复初始化）
 @st.cache_resource
@@ -99,4 +103,5 @@ with st.sidebar:
         st.rerun()
     
     st.markdown("---")
+
     st.caption("Powered by ZhipuAI GLM-4 & LangChain to luoyong")
