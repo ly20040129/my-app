@@ -2,7 +2,8 @@
 # app.py
 import os
 from dotenv import load_dotenv
-from langchain.agents import initialize_agent, AgentType
+# from langchain.agents import initialize_agent, AgentType
+from langgraph.prebuilt import create_react_agent
 from langchain_community.tools import DuckDuckGoSearchRun,Tool
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_community.agent_toolkits.load_tools import load_tools
@@ -23,7 +24,7 @@ def load_ai_agent():
     try:
         st.sidebar.info("正在初始化大模型。。。")
         llm = ChatZhipuAI(
-            model='glm-4',
+            model='glm-4.7-flash',
             zhipuai_api_key=api_key,
         )
         #test_response=llm.invoke("您好！很生气为你服务")
@@ -39,13 +40,8 @@ def load_ai_agent():
         st.sidebar.success("加载完毕，玩去吧你！")
 
         st.sidebar.info("创建煞笔ai代理ing。。。")
-        agent = initialize_agent(
-            tools,
-            llm,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=True,  # 网页端不需要显示详细思考过程
-            handle_parsing_errors=True  # 添加错误处理
-        )
+        # ==========这里是唯一修改点：替换原来initialize_agent==========
+        agent = create_react_agent(llm, tools)
         st.sidebar.success("创建成功，就快要。。飞起来！！！")
         return agent
     except Exception as e:
@@ -84,8 +80,9 @@ if prompt := st.chat_input("请输入您的问题..."):
                 agent = load_ai_agent()
                 
                 if agent:
-                    # 运行代理获取回复
-                    response = agent.run(prompt)
+                    # ==========这里修改：原来 agent.run(prompt) 改成新版invoke==========
+                    resp = agent.invoke({"messages": [("user", prompt)]})
+                    response = resp["messages"][-1].content
                     
                     # 显示回复
                     st.markdown(response)
